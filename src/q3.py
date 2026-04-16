@@ -1,24 +1,29 @@
 import numpy as np
-from utils import read_gray, save_image
 
-def my_hist_equalization(img):
-    hist = np.zeros(256, dtype=int)
-    for pixel in img.ravel():
-        hist[pixel] += 1
+from utils import image_path, output_path, read_gray, save_image, save_side_by_side
 
+
+def my_hist_equalization(img: np.ndarray) -> np.ndarray:
+    hist = np.bincount(img.ravel(), minlength=256)
     cdf = hist.cumsum()
-    cdf_masked = np.ma.masked_equal(cdf, 0)
-    cdf_min = cdf_masked.min()
-    total_pixels = img.size
+    nonzero = cdf[cdf > 0]
+    cdf_min = nonzero[0]
+    lut = np.round((cdf - cdf_min) * 255.0 / (img.size - cdf_min)).clip(0, 255).astype(np.uint8)
+    lut[cdf == 0] = 0
+    return lut[img]
 
-    lut = ((cdf_masked - cdf_min) * 255 / (total_pixels - cdf_min)).filled(0).astype(np.uint8)
-    out = lut[img]
-    return out
 
-def run():
-    img = read_gray("images/runway.png")
-    eq = my_hist_equalization(img)
-    save_image("outputs/q3/hist_equalized.png", eq)
+def run() -> None:
+    img = read_gray(image_path("runway.png"))
+    equalized = my_hist_equalization(img)
+    save_image(output_path("q3", "original.png"), img)
+    save_image(output_path("q3", "hist_equalized.png"), equalized)
+    save_side_by_side(
+        [img, equalized],
+        ["Original", "Manual histogram equalization"],
+        output_path("q3", "comparison.png"),
+    )
+
 
 if __name__ == "__main__":
     run()
