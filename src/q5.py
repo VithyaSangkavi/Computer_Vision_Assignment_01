@@ -1,8 +1,8 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
 from utils import image_path, output_path, read_gray, save_image, save_side_by_side, write_text
+import matplotlib.pyplot as plt
 
 
 def gaussian_kernel(size: int, sigma: float) -> np.ndarray:

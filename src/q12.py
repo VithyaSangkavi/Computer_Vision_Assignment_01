@@ -4,9 +4,9 @@ import numpy as np
 from utils import image_path, output_path, read_color, save_image, save_side_by_side, write_text
 
 
-def homomorphic_filter(gray: np.ndarray, sigma: float = 35.0, gamma_l: float = 0.6, gamma_h: float = 1.7) -> np.ndarray:
-    gray_float = gray.astype(np.float32) + 1.0
-    log_image = np.log(gray_float)
+def homomorphic_filter(gray: np.ndarray, sigma: float = 35.0, gamma_l: float = 0.85, gamma_h: float = 1.25) -> np.ndarray:
+    gray_float = gray.astype(np.float32) / 255.0
+    log_image = np.log1p(gray_float)
 
     rows, cols = gray.shape
     y = np.arange(rows) - rows / 2.0
@@ -21,10 +21,13 @@ def homomorphic_filter(gray: np.ndarray, sigma: float = 35.0, gamma_l: float = 0
     filtered = filter_response * shifted
     restored = np.fft.ifft2(np.fft.ifftshift(filtered))
 
-    exp_image = np.exp(np.real(restored)) - 1.0
-    exp_image -= exp_image.min()
-    exp_image /= exp_image.max() + 1e-8
-    return (exp_image * 255.0).astype(np.uint8)
+    corrected = np.expm1(np.real(restored))
+    corrected = np.maximum(corrected, 0)
+
+    # Robust stretching avoids one or two extreme pixels making the whole image dark.
+    low, high = np.percentile(corrected, (1, 99))
+    corrected = np.clip((corrected - low) / (high - low + 1e-8), 0, 1)
+    return (corrected * 255.0).astype(np.uint8)
 
 
 def run() -> None:

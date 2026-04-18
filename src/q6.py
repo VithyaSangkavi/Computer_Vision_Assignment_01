@@ -1,8 +1,8 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
 from utils import image_path, output_path, read_gray, save_image, save_side_by_side, write_text
+import matplotlib.pyplot as plt
 
 
 def derivative_of_gaussian_kernels(size: int, sigma: float) -> tuple[np.ndarray, np.ndarray]:
@@ -51,7 +51,7 @@ def plot_kernel_surface(kernel: np.ndarray, title: str, save_path: str) -> None:
 
 
 def run() -> None:
-    image = read_gray(image_path("rice.png"))
+    image = read_gray(image_path("brain_proton_density_slice.png"))
     gx_5, gy_5 = derivative_of_gaussian_kernels(5, 2.0)
     gx_51, _ = derivative_of_gaussian_kernels(51, 2.0)
 
@@ -63,6 +63,7 @@ def run() -> None:
     sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
     sobel_magnitude = np.hypot(sobel_x, sobel_y)
 
+    save_image(output_path("q6", "original.png"), image)
     save_image(output_path("q6", "manual_grad_x.png"), normalize_for_display(grad_x))
     save_image(output_path("q6", "manual_grad_y.png"), normalize_for_display(grad_y))
     save_image(output_path("q6", "manual_gradient_magnitude.png"), normalize_for_display(magnitude))
